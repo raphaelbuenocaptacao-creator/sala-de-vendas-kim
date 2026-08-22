@@ -32,7 +32,6 @@ const TEAM_BY_NAME=new Map(CURRENT_TEAM.map(x=>[x.name,x]));
 
 function labelMonth(k){return `${monthName[k.slice(5,7)]}/${k.slice(0,4)}`}
 function inRange(m,s,e){return (!s||m>=s)&&(!e||m<=e)}
-function staffState(name){if(MANAGEMENT[name])return 'management';return ACTIVE_NAMES.has(name)?'active':'inactive'}
 function staffGroup(name){return TEAM_BY_NAME.get(name)?.group||'—'}
 function emptyPerson(item){return {name:item.name,registros:0,tours:0,q:0,nq:0,vendas:0,ativos:0,cancel:0,vgv:0,activeVgv:0,conv:0,ticket:0,cancelRate:0,qRate:0}}
 
@@ -46,14 +45,9 @@ function roleRanking(role,s,e){
   ROLE.forEach(r=>{if(r[1]!==role||!inRange(r[0],s,e))return;const n=r[2];if(!m.has(n))m.set(n,{name:n,registros:0,tours:0,q:0,nq:0,vendas:0,ativos:0,cancel:0,vgv:0,activeVgv:0});const a=m.get(n);a.registros+=r[3];a.tours+=r[4];a.q+=r[5];a.nq+=r[6];a.vendas+=r[7];a.ativos+=r[8];a.cancel+=r[9];a.vgv+=r[10];a.activeVgv+=r[11]});
   const arr=[...m.values()];arr.forEach(a=>{a.conv=a.tours?a.vendas/a.tours:0;a.ticket=a.vendas?a.vgv/a.vendas:0;a.cancelRate=a.vendas?a.cancel/a.vendas:0;a.qRate=a.registros?a.q/a.registros:0});return arr;
 }
-function filteredRanking(role,s,e,status){
-  let arr=roleRanking(role,s,e).filter(a=>staffState(a.name)!=='management');
-  if(status==='active'){
-    arr=arr.filter(a=>staffState(a.name)==='active');
-    CURRENT_TEAM.filter(x=>x.role===role).forEach(item=>{if(!arr.some(a=>a.name===item.name))arr.push(emptyPerson(item))});
-  }else if(status==='inactive'){
-    arr=arr.filter(a=>staffState(a.name)==='inactive');
-  }
+function activeRanking(role,s,e){
+  let arr=roleRanking(role,s,e).filter(a=>ACTIVE_NAMES.has(a.name));
+  CURRENT_TEAM.filter(x=>x.role===role).forEach(item=>{if(!arr.some(a=>a.name===item.name))arr.push(emptyPerson(item))});
   return arr;
 }
 function decision(a,benchmark,roomCancel){
@@ -79,32 +73,32 @@ function renderGroups(){
 }
 
 function render(){
-  const s=$('startMonth').value,e=$('endMonth').value,role=$('role').value,status=$('staffStatus').value,sort=$('sortMetric').value,q=$('search').value.trim().toUpperCase();
-  const room=sumRoom(s,e), months=monthly(s,e); let arr=filteredRanking(role,s,e,status);
+  const s=$('startMonth').value,e=$('endMonth').value,role=$('role').value,sort=$('sortMetric').value,q=$('search').value.trim().toUpperCase();
+  const room=sumRoom(s,e), months=monthly(s,e); let arr=activeRanking(role,s,e);
   const benchmark=arr.reduce((z,a)=>z+a.vendas,0)/(arr.reduce((z,a)=>z+a.tours,0)||1);
   const sorters={vgv:(a,b)=>b.vgv-a.vgv,vendas:(a,b)=>b.vendas-a.vendas,conv:(a,b)=>b.conv-a.conv,active:(a,b)=>b.activeVgv-a.activeVgv,cancelRate:(a,b)=>a.cancelRate-b.cancelRate};
   arr.sort(sorters[sort]); if(q)arr=arr.filter(a=>a.name.includes(q)||(TEAM_BY_NAME.get(a.name)?.label||'').includes(q));
-  const statusLabel={active:'ATIVOS',inactive:'INATIVOS',all:'TODOS OPERACIONAIS'}[status];
   $('periodLabel').textContent=`Período: ${labelMonth(s)} a ${labelMonth(e)} • Base emitida em ${META.issued}`;
   $('kpiTours').textContent=fmtN.format(room.tours);$('kpiSales').textContent=fmtN.format(room.vendas);$('kpiVgv').textContent=fmtCompact(room.vgv);$('kpiActiveVgv').textContent=fmtCompact(room.activeVgv);
   $('kpiConv').textContent=fmtPct(room.conv);$('kpiTicket').textContent=fmtMoney(room.ticket);$('kpiCancel').textContent=fmtN.format(room.cancel);$('kpiCancelRate').textContent=`${fmtPct(room.cancelRate)} das vendas`; $('kpiNoTour').textContent=fmtN.format(room.notour);
-  $('roleEyebrow').textContent=role==='liner'?'CONSULTORIA':'FECHAMENTO';$('rankingTitle').textContent=`${role==='liner'?'Ranking de Liners':'Ranking de Closers'} — ${statusLabel}`;$('benchmark').textContent=`Benchmark do filtro: ${fmtPct(benchmark)} de conversão`;
-  $('rankingBody').innerHTML=arr.map((a,i)=>{const[d,cl]=decision(a,benchmark,room.cancelRate);const st=staffState(a.name);const person=TEAM_BY_NAME.get(a.name);const shown=person?.label||a.name;return `<tr><td class="rank">${i+1}</td><td><b>${shown}</b>${shown!==a.name?`<small class="subname">${a.name}</small>`:''}</td><td>${staffGroup(a.name)}</td><td><span class="status ${st}">${st==='active'?'ATIVO':'INATIVO'}</span></td><td>${fmtN.format(a.tours)}</td><td>${fmtN.format(a.vendas)}</td><td>${fmtMoney(a.vgv)}</td><td>${fmtPct(a.conv)}</td><td>${fmtMoney(a.ticket)}</td><td>${fmtPct(a.cancelRate)}</td><td>${fmtPct(a.qRate)}</td><td><span class="decision ${cl}">${d}</span></td></tr>`}).join('');
-  if(!arr.length)$('rankingBody').innerHTML='<tr><td colspan="12" class="empty-row">Nenhum profissional encontrado neste filtro.</td></tr>';
+  $('roleEyebrow').textContent=role==='liner'?'CONSULTORIA':'FECHAMENTO';$('rankingTitle').textContent=`${role==='liner'?'Ranking de Liners':'Ranking de Closers'} — EQUIPE ATIVA`;$('benchmark').textContent=`Benchmark dos ativos: ${fmtPct(benchmark)} de conversão`;
+  $('rankingBody').innerHTML=arr.map((a,i)=>{const[d,cl]=decision(a,benchmark,room.cancelRate);const person=TEAM_BY_NAME.get(a.name);const shown=person?.label||a.name;return `<tr><td class="rank">${i+1}</td><td><b>${shown}</b>${shown!==a.name?`<small class="subname">${a.name}</small>`:''}</td><td>${staffGroup(a.name)}</td><td><span class="status active">ATIVO</span></td><td>${fmtN.format(a.tours)}</td><td>${fmtN.format(a.vendas)}</td><td>${fmtMoney(a.vgv)}</td><td>${fmtPct(a.conv)}</td><td>${fmtMoney(a.ticket)}</td><td>${fmtPct(a.cancelRate)}</td><td>${fmtPct(a.qRate)}</td><td><span class="decision ${cl}">${d}</span></td></tr>`}).join('');
+  if(!arr.length)$('rankingBody').innerHTML='<tr><td colspan="12" class="empty-row">Nenhum profissional ativo encontrado.</td></tr>';
   makeChart('vgvChart','line',{labels:months.map(m=>m.label),datasets:[{label:'VGV bruto',data:months.map(m=>m.vgv),borderWidth:2,tension:.25},{label:'VGV ativo',data:months.map(m=>m.active),borderWidth:2,tension:.25}]},{});
   makeChart('salesChart','bar',{labels:months.map(m=>m.label),datasets:[{label:'Vendas',data:months.map(m=>m.vendas),yAxisID:'y'},{label:'Conversão %',data:months.map(m=>m.conv*100),type:'line',yAxisID:'y1',borderWidth:2,tension:.25}]},{scales:{x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.08)'}},y:{position:'left',ticks:{color:'#94a3b8'},grid:{color:'rgba(148,163,184,.10)'}},y1:{position:'right',ticks:{color:'#94a3b8',callback:v=>v+'%'},grid:{drawOnChartArea:false}}}});
-  const raw=filteredRanking(role,s,e,status), eligible=raw.filter(a=>a.tours>=30).sort((a,b)=>b.conv-a.conv), topVgv=[...raw].sort((a,b)=>b.vgv-a.vgv)[0], best=eligible[0], roleName=role==='liner'?'Liner':'Closer';
+  const raw=activeRanking(role,s,e), eligible=raw.filter(a=>a.tours>=30).sort((a,b)=>b.conv-a.conv), topVgv=[...raw].sort((a,b)=>b.vgv-a.vgv)[0], best=eligible[0], roleName=role==='liner'?'Liner':'Closer';
   const items=[
-    `Filtro atual: <b>${statusLabel}</b>. Kimberly e Marcel não entram em nenhum ranking operacional.`,
-    topVgv?`Maior VGV ${roleName} no filtro: <b>${TEAM_BY_NAME.get(topVgv.name)?.label||topVgv.name}</b> — ${fmtMoney(topVgv.vgv)}.`:'',
-    best?`Melhor conversão com ≥30 atendimentos: <b>${TEAM_BY_NAME.get(best.name)?.label||best.name}</b> — ${fmtPct(best.conv)}.`:'',
-    status==='active'&&role==='liner'?`A equipe ativa de Liners inclui <b>DANIELA (G4)</b>; ela aparece com “SEM DADOS” porque não há registro identificado no relatório KIM deste período.`:'',
-    `Os KPIs e gráficos gerais acima continuam representando a <b>sala completa no período</b>; o filtro Ativos/Inativos atua no ranking operacional.`,
+    `Dashboard operacional: <b>somente equipe ativa atual</b>. Profissionais inativos não aparecem em ranking, busca ou decisão.`,
+    topVgv?`Maior VGV ${roleName} entre os ativos: <b>${TEAM_BY_NAME.get(topVgv.name)?.label||topVgv.name}</b> — ${fmtMoney(topVgv.vgv)}.`:'',
+    best?`Melhor conversão ativa com ≥30 atendimentos: <b>${TEAM_BY_NAME.get(best.name)?.label||best.name}</b> — ${fmtPct(best.conv)}.`:'',
+    role==='liner'?`A equipe ativa de Liners inclui <b>DANIELA (G4)</b>; ela aparece com “SEM DADOS” porque não há registro identificado no relatório KIM deste período.`:'',
+    `Kimberly permanece como <b>Gerente de Sala</b> e Marcel como <b>Diretor</b>, ambos fora dos rankings operacionais.`,
+    `Os KPIs e gráficos gerais representam o resultado consolidado da sala no período; o ranking operacional é exclusivo da equipe ativa atual.`,
     `Conversão geral da sala no período: <b>${fmtPct(room.conv)}</b>, com ticket médio de <b>${fmtMoney(room.ticket)}</b>.`,
     e===META.maxMonth?`O último mês está parcial até <b>${META.partialEnd}</b>.`:''
   ].filter(Boolean);
   $('insights').innerHTML=items.map(x=>`<div class="insight">${x}</div>`).join('');
 }
-function reset(){ $('startMonth').value=META.minMonth;$('endMonth').value=META.maxMonth;$('staffStatus').value='active';$('search').value='';render()}
-['startMonth','endMonth','role','staffStatus','sortMetric','search'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));$('reset').addEventListener('click',reset);
+function reset(){ $('startMonth').value=META.minMonth;$('endMonth').value=META.maxMonth;$('search').value='';render()}
+['startMonth','endMonth','role','sortMetric','search'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));$('reset').addEventListener('click',reset);
 $('startMonth').min=META.minMonth;$('startMonth').max=META.maxMonth;$('endMonth').min=META.minMonth;$('endMonth').max=META.maxMonth;renderGroups();reset();

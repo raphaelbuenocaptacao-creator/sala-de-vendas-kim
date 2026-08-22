@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sala de Vendas KIM | Consultoria & Closers</title>
+  <meta name="description" content="Dashboard interativo de performance da consultoria (liners) e closers."/>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <span class="eyebrow">SALA DE VENDAS KIM</span>
+      <h1>Consultoria & Closers</h1>
+      <p id="periodLabel">Resultados do período</p>
+    </div>
+    <div class="badge">GESTÃO DE PERFORMANCE</div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel filters">
+      <div class="field">
+        <label for="startMonth">Início</label>
+        <input id="startMonth" type="month"/>
+      </div>
+      <div class="field">
+        <label for="endMonth">Fim</label>
+        <input id="endMonth" type="month"/>
+      </div>
+      <div class="field">
+        <label for="role">Ranking</label>
+        <select id="role">
+          <option value="liner">Liners / Consultoria</option>
+          <option value="closer">Closers</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sortMetric">Ordenar por</label>
+        <select id="sortMetric">
+          <option value="vgv">VGV</option>
+          <option value="vendas">Vendas</option>
+          <option value="conv">Conversão</option>
+          <option value="active">VGV ativo</option>
+          <option value="cancelRate">Menor cancelamento</option>
+        </select>
+      </div>
+      <div class="field grow">
+        <label for="search">Profissional</label>
+        <input id="search" type="search" placeholder="Buscar nome..."/>
+      </div>
+      <button id="reset" class="btn">Período completo</button>
+    </section>
+
+    <section class="kpis">
+      <article class="kpi"><span>Atendimentos</span><strong id="kpiTours">—</strong><small>efetivos</small></article>
+      <article class="kpi gold"><span>Vendas</span><strong id="kpiSales">—</strong><small>contratos</small></article>
+      <article class="kpi"><span>VGV bruto</span><strong id="kpiVgv">—</strong><small>valor vendido</small></article>
+      <article class="kpi green"><span>VGV ativo</span><strong id="kpiActiveVgv">—</strong><small>linhas com ativo</small></article>
+      <article class="kpi green"><span>Conversão</span><strong id="kpiConv">—</strong><small>vendas / atend.</small></article>
+      <article class="kpi"><span>Ticket médio</span><strong id="kpiTicket">—</strong><small>VGV / venda</small></article>
+      <article class="kpi red"><span>Cancelamentos</span><strong id="kpiCancel">—</strong><small id="kpiCancelRate">—</small></article>
+      <article class="kpi orange"><span>NoTour</span><strong id="kpiNoTour">—</strong><small>não assistiu</small></article>
+    </section>
+
+    <section class="charts">
+      <article class="panel chart-card">
+        <div class="section-title"><div><span>Evolução</span><h2>VGV por mês</h2></div></div>
+        <canvas id="vgvChart"></canvas>
+      </article>
+      <article class="panel chart-card">
+        <div class="section-title"><div><span>Evolução</span><h2>Vendas & conversão</h2></div></div>
+        <canvas id="salesChart"></canvas>
+      </article>
+    </section>
+
+    <section class="panel ranking">
+      <div class="section-title">
+        <div><span id="roleEyebrow">CONSULTORIA</span><h2 id="rankingTitle">Ranking de Liners</h2></div>
+        <p id="benchmark">—</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Profissional</th><th>Atend.</th><th>Vendas</th><th>VGV</th>
+              <th>Conversão</th><th>Ticket</th><th>Cancel.</th><th>Q rate</th><th>Decisão</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="two-col">
+      <article class="panel">
+        <div class="section-title"><div><span>DESTAQUES</span><h2>Leitura executiva</h2></div></div>
+        <div id="insights" class="insights"></div>
+      </article>
+      <article class="panel">
+        <div class="section-title"><div><span>METODOLOGIA</span><h2>Como os números foram lidos</h2></div></div>
+        <ul class="method">
+          <li><b>Vendas:</b> cada token do status do contrato conta 1; “#” indica múltiplos contratos.</li>
+          <li><b>Cancelamento:</b> cada token iniciado por CANCELADO entra no histórico.</li>
+          <li><b>VGV ativo:</b> soma o VGV de linhas com ao menos um contrato ATIVO; linhas mistas não são rateadas.</li>
+          <li><b>Decisão:</b> amostra baixa abaixo de 30 atendimentos; comparação de conversão com benchmark do papel.</li>
+          <li><b>Agosto:</b> base parcial até 21/08/2026.</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <span>Fonte: Document KIM.csv • emitido em 22/08/2026</span>
+    <span>Dashboard Sala de Vendas KIM</span>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

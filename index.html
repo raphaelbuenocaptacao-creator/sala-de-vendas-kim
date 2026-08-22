@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Sala de Vendas KIM | Consultoria & Closers</title>
-  <meta name="description" content="Dashboard interativo de performance da consultoria (liners) e closers."/>
+  <meta name="description" content="Dashboard interativo de performance da equipe ativa de consultoria (liners) e closers."/>
   <link rel="stylesheet" href="styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
@@ -15,7 +15,7 @@
       <h1>Consultoria & Closers</h1>
       <p id="periodLabel">Resultados do período</p>
     </div>
-    <div class="badge">GESTÃO DE PERFORMANCE</div>
+    <div class="badge">EQUIPE ATIVA</div>
   </header>
 
   <main class="wrap">
@@ -36,14 +36,6 @@
         </select>
       </div>
       <div class="field">
-        <label for="staffStatus">Equipe</label>
-        <select id="staffStatus">
-          <option value="active">Ativos</option>
-          <option value="inactive">Inativos</option>
-          <option value="all">Todos operacionais</option>
-        </select>
-      </div>
-      <div class="field">
         <label for="sortMetric">Ordenar por</label>
         <select id="sortMetric">
           <option value="vgv">VGV</option>
@@ -54,8 +46,8 @@
         </select>
       </div>
       <div class="field grow">
-        <label for="search">Profissional</label>
-        <input id="search" type="search" placeholder="Buscar nome..."/>
+        <label for="search">Profissional ativo</label>
+        <input id="search" type="search" placeholder="Buscar ativo..."/>
       </div>
       <button id="reset" class="btn">Período completo</button>
     </section>
@@ -64,19 +56,19 @@
       <article class="panel management-card">
         <span class="eyebrow">GERENTE DE SALA</span>
         <strong>KIMBERLY CRISTINA TAVARES</strong>
-        <small>Gestão — fora dos rankings operacionais atuais</small>
+        <small>Gestão — fora dos rankings operacionais</small>
       </article>
       <article class="panel management-card">
         <span class="eyebrow">DIRETOR</span>
         <strong>MARCEL VINICIUS DORADO EUGENI</strong>
-        <small>Direção — fora dos rankings operacionais atuais</small>
+        <small>Direção — fora dos rankings operacionais</small>
       </article>
     </section>
 
     <section class="panel roster-panel">
       <div class="section-title">
         <div><span>EQUIPE ATUAL</span><h2>Grupos da Sala</h2></div>
-        <p>Somente estes profissionais são considerados ativos.</p>
+        <p>O dashboard operacional considera somente estes profissionais ativos.</p>
       </div>
       <div id="groupGrid" class="group-grid"></div>
     </section>
@@ -105,7 +97,7 @@
 
     <section class="panel ranking">
       <div class="section-title">
-        <div><span id="roleEyebrow">CONSULTORIA</span><h2 id="rankingTitle">Ranking de Liners Ativos</h2></div>
+        <div><span id="roleEyebrow">CONSULTORIA</span><h2 id="rankingTitle">Ranking de Liners — Equipe Ativa</h2></div>
         <p id="benchmark">—</p>
       </div>
       <div class="table-wrap">
@@ -129,13 +121,13 @@
       <article class="panel">
         <div class="section-title"><div><span>METODOLOGIA</span><h2>Como os números foram lidos</h2></div></div>
         <ul class="method">
-          <li><b>Equipe ativa:</b> definida pela escala atual enviada em 22/08/2026.</li>
+          <li><b>Equipe operacional:</b> o dashboard exibe somente os profissionais ativos da escala atual enviada em 22/08/2026.</li>
           <li><b>Gestão:</b> Kimberly é Gerente de Sala e Marcel é Diretor; ambos ficam fora dos rankings operacionais.</li>
-          <li><b>Inativos:</b> demais nomes continuam no histórico, mas não aparecem no ranking padrão.</li>
+          <li><b>Profissionais inativos:</b> não aparecem em rankings, filtros, buscas ou tomada de decisão do dashboard.</li>
           <li><b>Vendas:</b> cada token do status do contrato conta 1; “#” indica múltiplos contratos.</li>
           <li><b>Cancelamento:</b> cada token iniciado por CANCELADO entra no histórico.</li>
           <li><b>VGV ativo:</b> soma o VGV de linhas com ao menos um contrato ATIVO; linhas mistas não são rateadas.</li>
-          <li><b>Decisão:</b> amostra baixa abaixo de 30 atendimentos; comparação de conversão com benchmark do papel e equipe filtrada.</li>
+          <li><b>Decisão:</b> amostra baixa abaixo de 30 atendimentos; comparação de conversão com benchmark da equipe ativa do papel.</li>
           <li><b>Agosto:</b> base parcial até 21/08/2026.</li>
         </ul>
       </article>
@@ -144,7 +136,7 @@
 
   <footer>
     <span>Fonte: Document KIM.csv • emitido em 22/08/2026</span>
-    <span>Dashboard Sala de Vendas KIM</span>
+    <span>Dashboard Sala de Vendas KIM • Equipe Ativa</span>
   </footer>
 
   <script src="data.js"></script>

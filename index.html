@@ -36,6 +36,14 @@
         </select>
       </div>
       <div class="field">
+        <label for="staffStatus">Equipe</label>
+        <select id="staffStatus">
+          <option value="active">Ativos</option>
+          <option value="inactive">Inativos</option>
+          <option value="all">Todos operacionais</option>
+        </select>
+      </div>
+      <div class="field">
         <label for="sortMetric">Ordenar por</label>
         <select id="sortMetric">
           <option value="vgv">VGV</option>
@@ -52,9 +60,30 @@
       <button id="reset" class="btn">Período completo</button>
     </section>
 
+    <section class="management-grid">
+      <article class="panel management-card">
+        <span class="eyebrow">GERENTE DE SALA</span>
+        <strong>KIMBERLY CRISTINA TAVARES</strong>
+        <small>Gestão — fora dos rankings operacionais atuais</small>
+      </article>
+      <article class="panel management-card">
+        <span class="eyebrow">DIRETOR</span>
+        <strong>MARCEL VINICIUS DORADO EUGENI</strong>
+        <small>Direção — fora dos rankings operacionais atuais</small>
+      </article>
+    </section>
+
+    <section class="panel roster-panel">
+      <div class="section-title">
+        <div><span>EQUIPE ATUAL</span><h2>Grupos da Sala</h2></div>
+        <p>Somente estes profissionais são considerados ativos.</p>
+      </div>
+      <div id="groupGrid" class="group-grid"></div>
+    </section>
+
     <section class="kpis">
-      <article class="kpi"><span>Atendimentos</span><strong id="kpiTours">—</strong><small>efetivos</small></article>
-      <article class="kpi gold"><span>Vendas</span><strong id="kpiSales">—</strong><small>contratos</small></article>
+      <article class="kpi"><span>Atendimentos</span><strong id="kpiTours">—</strong><small>efetivos — sala completa</small></article>
+      <article class="kpi gold"><span>Vendas</span><strong id="kpiSales">—</strong><small>contratos — sala completa</small></article>
       <article class="kpi"><span>VGV bruto</span><strong id="kpiVgv">—</strong><small>valor vendido</small></article>
       <article class="kpi green"><span>VGV ativo</span><strong id="kpiActiveVgv">—</strong><small>linhas com ativo</small></article>
       <article class="kpi green"><span>Conversão</span><strong id="kpiConv">—</strong><small>vendas / atend.</small></article>
@@ -76,14 +105,14 @@
 
     <section class="panel ranking">
       <div class="section-title">
-        <div><span id="roleEyebrow">CONSULTORIA</span><h2 id="rankingTitle">Ranking de Liners</h2></div>
+        <div><span id="roleEyebrow">CONSULTORIA</span><h2 id="rankingTitle">Ranking de Liners Ativos</h2></div>
         <p id="benchmark">—</p>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>#</th><th>Profissional</th><th>Atend.</th><th>Vendas</th><th>VGV</th>
+              <th>#</th><th>Profissional</th><th>Grupo</th><th>Status</th><th>Atend.</th><th>Vendas</th><th>VGV</th>
               <th>Conversão</th><th>Ticket</th><th>Cancel.</th><th>Q rate</th><th>Decisão</th>
             </tr>
           </thead>
@@ -100,10 +129,13 @@
       <article class="panel">
         <div class="section-title"><div><span>METODOLOGIA</span><h2>Como os números foram lidos</h2></div></div>
         <ul class="method">
+          <li><b>Equipe ativa:</b> definida pela escala atual enviada em 22/08/2026.</li>
+          <li><b>Gestão:</b> Kimberly é Gerente de Sala e Marcel é Diretor; ambos ficam fora dos rankings operacionais.</li>
+          <li><b>Inativos:</b> demais nomes continuam no histórico, mas não aparecem no ranking padrão.</li>
           <li><b>Vendas:</b> cada token do status do contrato conta 1; “#” indica múltiplos contratos.</li>
           <li><b>Cancelamento:</b> cada token iniciado por CANCELADO entra no histórico.</li>
           <li><b>VGV ativo:</b> soma o VGV de linhas com ao menos um contrato ATIVO; linhas mistas não são rateadas.</li>
-          <li><b>Decisão:</b> amostra baixa abaixo de 30 atendimentos; comparação de conversão com benchmark do papel.</li>
+          <li><b>Decisão:</b> amostra baixa abaixo de 30 atendimentos; comparação de conversão com benchmark do papel e equipe filtrada.</li>
           <li><b>Agosto:</b> base parcial até 21/08/2026.</li>
         </ul>
       </article>

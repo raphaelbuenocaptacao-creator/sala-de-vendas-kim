@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Sala de Vendas KIM">
+  <rect width="512" height="512" fill="#0b0f14"/>
+  <circle cx="256" cy="256" r="180" fill="#151d28"/>
+  <path d="M156 144h58v92l82-92h72l-98 108 104 116h-74l-86-100v100h-58z" fill="#f5f7fa"/>
+  <circle cx="376" cy="140" r="34" fill="#22c55e"/>
+</svg>

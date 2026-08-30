@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kim-vendas-shell-v2';
+const CACHE_NAME = 'kim-vendas-shell-v3-safe';
 const APP_SHELL = [
   './',
   './index.html',
@@ -11,6 +11,8 @@ const APP_SHELL = [
   './icons/icon-512-maskable.svg'
 ];
 const APP_SHELL_PATHS = new Set(APP_SHELL.map(item => new URL(item, self.registration.scope).pathname));
+const PRIVATE_PATH_RE = /\/(api|auth|login|logout|admin|session|sessions|token|tokens|password|account|profile|me)(\/|$)/i;
+const SENSITIVE_QUERY_RE = /^(token|access_token|refresh_token|password|passwd|secret|session|auth|authorization|api_key|apikey|key|code|credential|credentials)$/i;
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -28,14 +30,19 @@ self.addEventListener('activate', event => {
   );
 });
 
+function hasSensitiveQuery(url) {
+  for (const key of url.searchParams.keys()) {
+    if (SENSITIVE_QUERY_RE.test(key)) return true;
+  }
+  return false;
+}
+
 function isPrivateRequest(request, url) {
   if (request.method !== 'GET') return true;
   if (url.origin !== self.location.origin) return true;
   if (request.headers.has('authorization') || request.headers.has('cookie')) return true;
-  if (/\/(api|auth|login|logout|admin|session|token|password|account|profile)(\/|$)/i.test(url.pathname)) return true;
-  for (const key of ['token','access_token','refresh_token','password','secret','session','auth']) {
-    if (url.searchParams.has(key)) return true;
-  }
+  if (PRIVATE_PATH_RE.test(url.pathname)) return true;
+  if (hasSensitiveQuery(url)) return true;
   return false;
 }
 
@@ -46,14 +53,16 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('./index.html'))
+      fetch(new Request(request, { cache: 'no-store' }))
+        .catch(() => caches.match('./index.html'))
     );
     return;
   }
 
+  if (url.search) return;
   if (!APP_SHELL_PATHS.has(url.pathname)) return;
 
   event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request))
+    caches.match(request).then(cached => cached || fetch(new Request(request, { cache: 'no-store' })))
   );
 });

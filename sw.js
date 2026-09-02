@@ -1,4 +1,5 @@
-const CACHE_NAME = 'kim-vendas-shell-v3-safe';
+const CACHE_PREFIX = 'kim-vendas-shell-';
+const CACHE_NAME = `${CACHE_PREFIX}v4-safe`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -25,7 +26,11 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(keys => Promise.all(
+        keys
+          .filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      ))
       .then(() => self.clients.claim())
   );
 });
@@ -40,10 +45,28 @@ function hasSensitiveQuery(url) {
 function isPrivateRequest(request, url) {
   if (request.method !== 'GET') return true;
   if (url.origin !== self.location.origin) return true;
-  if (request.headers.has('authorization') || request.headers.has('cookie')) return true;
+  if (request.headers.has('authorization') || request.headers.has('cookie') || request.headers.has('range')) return true;
   if (PRIVATE_PATH_RE.test(url.pathname)) return true;
   if (hasSensitiveQuery(url)) return true;
   return false;
+}
+
+function isCacheableResponse(response) {
+  if (!response || !response.ok || response.status === 206) return false;
+  if (response.type === 'opaque' || response.redirected) return false;
+  const cacheControl = response.headers.get('cache-control') || '';
+  if (/\b(no-store|private)\b/i.test(cacheControl)) return false;
+  if (response.headers.has('set-cookie') || response.headers.has('content-range')) return false;
+  return true;
+}
+
+async function fetchAndCache(request) {
+  const response = await fetch(new Request(request, { cache: 'no-store' }));
+  if (isCacheableResponse(response)) {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response.clone());
+  }
+  return response;
 }
 
 self.addEventListener('fetch', event => {
@@ -63,6 +86,6 @@ self.addEventListener('fetch', event => {
   if (!APP_SHELL_PATHS.has(url.pathname)) return;
 
   event.respondWith(
-    caches.match(request).then(cached => cached || fetch(new Request(request, { cache: 'no-store' })))
+    caches.match(request).then(cached => cached || fetchAndCache(request))
   );
 });

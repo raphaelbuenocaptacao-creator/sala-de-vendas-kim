@@ -11,8 +11,8 @@
   <title>Sala de Vendas KIM | Consultoria & Closers</title>
   <meta name="description" content="Dashboard interativo de performance da equipe ativa de consultoria (liners) e closers."/>
   <link rel="manifest" href="manifest.webmanifest"/>
-  <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml"/>
-  <link rel="apple-touch-icon" href="icons/icon-192.svg"/>
+  <link rel="icon" href="icons/icon-192.png" type="image/png"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
   <link rel="stylesheet" href="styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
@@ -72,7 +72,7 @@
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+          const registration = await navigator.serviceWorker.register('./sw.js?v=5-raster-safe', { updateViaCache: 'none' });
           await registration.update();
         } catch (error) {
           console.error('Falha ao registrar service worker', error);

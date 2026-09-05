@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'kim-vendas-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v4-safe`;
+const CACHE_NAME = `${CACHE_PREFIX}v5-raster-safe`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,9 +7,9 @@ const APP_SHELL = [
   './data.js',
   './app.js',
   './manifest.webmanifest',
-  './icons/icon-192.svg',
-  './icons/icon-512.svg',
-  './icons/icon-512-maskable.svg'
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-512-maskable.png'
 ];
 const APP_SHELL_PATHS = new Set(APP_SHELL.map(item => new URL(item, self.registration.scope).pathname));
 const PRIVATE_PATH_RE = /\/(api|auth|login|logout|admin|session|sessions|token|tokens|password|account|profile|me)(\/|$)/i;
@@ -45,7 +45,12 @@ function hasSensitiveQuery(url) {
 function isPrivateRequest(request, url) {
   if (request.method !== 'GET') return true;
   if (url.origin !== self.location.origin) return true;
-  if (request.headers.has('authorization') || request.headers.has('cookie') || request.headers.has('range')) return true;
+  if (
+    request.headers.has('authorization') ||
+    request.headers.has('cookie') ||
+    request.headers.has('range') ||
+    request.headers.has('if-range')
+  ) return true;
   if (PRIVATE_PATH_RE.test(url.pathname)) return true;
   if (hasSensitiveQuery(url)) return true;
   return false;
@@ -61,7 +66,7 @@ function isCacheableResponse(response) {
 }
 
 async function fetchAndCache(request) {
-  const response = await fetch(new Request(request, { cache: 'no-store' }));
+  const response = await fetch(new Request(request, { cache: 'no-store', redirect: 'error' }));
   if (isCacheableResponse(response)) {
     const cache = await caches.open(CACHE_NAME);
     await cache.put(request, response.clone());
@@ -76,7 +81,7 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(new Request(request, { cache: 'no-store' }))
+      fetch(new Request(request, { cache: 'no-store', redirect: 'error' }))
         .catch(() => caches.match('./index.html'))
     );
     return;

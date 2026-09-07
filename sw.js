@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'kim-vendas-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v5-raster-safe`;
+const CACHE_NAME = `${CACHE_PREFIX}v6-private-vary-safe`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -14,26 +14,6 @@ const APP_SHELL = [
 const APP_SHELL_PATHS = new Set(APP_SHELL.map(item => new URL(item, self.registration.scope).pathname));
 const PRIVATE_PATH_RE = /\/(api|auth|login|logout|admin|session|sessions|token|tokens|password|account|profile|me)(\/|$)/i;
 const SENSITIVE_QUERY_RE = /^(token|access_token|refresh_token|password|passwd|secret|session|auth|authorization|api_key|apikey|key|code|credential|credentials)$/i;
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
-  );
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys
-          .filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      ))
-      .then(() => self.clients.claim())
-  );
-});
 
 function hasSensitiveQuery(url) {
   for (const key of url.searchParams.keys()) {
@@ -62,8 +42,38 @@ function isCacheableResponse(response) {
   const cacheControl = response.headers.get('cache-control') || '';
   if (/\b(no-store|private)\b/i.test(cacheControl)) return false;
   if (response.headers.has('set-cookie') || response.headers.has('content-range')) return false;
+  const vary = (response.headers.get('vary') || '').toLowerCase();
+  if (vary.includes('cookie') || vary.includes('authorization')) return false;
   return true;
 }
+
+async function precacheShell() {
+  const cache = await caches.open(CACHE_NAME);
+  await Promise.all(APP_SHELL.map(async asset => {
+    try {
+      const response = await fetch(asset, { cache: 'reload', credentials: 'omit', redirect: 'error' });
+      if (isCacheableResponse(response)) await cache.put(asset, response.clone());
+    } catch (error) {
+      // A missing optional shell asset must not poison installation.
+    }
+  }));
+}
+
+self.addEventListener('install', event => {
+  event.waitUntil(precacheShell().then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys
+          .filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
+  );
+});
 
 async function fetchAndCache(request) {
   const response = await fetch(new Request(request, { cache: 'no-store', redirect: 'error' }));

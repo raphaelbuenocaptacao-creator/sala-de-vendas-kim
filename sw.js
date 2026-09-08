@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'kim-vendas-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v6-private-vary-safe`;
+const CACHE_NAME = `${CACHE_PREFIX}v7-private-vary-star-safe`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -43,7 +43,10 @@ function isCacheableResponse(response) {
   if (/\b(no-store|private)\b/i.test(cacheControl)) return false;
   if (response.headers.has('set-cookie') || response.headers.has('content-range')) return false;
   const vary = (response.headers.get('vary') || '').toLowerCase();
-  if (vary.includes('cookie') || vary.includes('authorization')) return false;
+  if (vary.split(',').some(value => {
+    const key = value.trim();
+    return key === '*' || key === 'cookie' || key === 'authorization';
+  })) return false;
   return true;
 }
 

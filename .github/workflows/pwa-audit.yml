@@ -1,0 +1,58 @@
+name: KIM PWA Audit
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pwa-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate PWA contract
+        run: |
+          node --check sw.js
+          node --check app.js
+          node <<'NODE'
+          const fs = require('fs');
+          const sw = fs.readFileSync('sw.js', 'utf8');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const manifest = JSON.parse(fs.readFileSync('manifest.webmanifest', 'utf8'));
+
+          for (const key of ['name','short_name','start_url','display','theme_color','background_color','icons']) {
+            if (!manifest[key]) throw new Error(`manifest missing ${key}`);
+          }
+          const icon192 = manifest.icons.some(i => i.src.includes('192') && i.sizes === '192x192' && i.type === 'image/png');
+          const icon512 = manifest.icons.some(i => i.src.includes('512') && i.sizes === '512x512' && i.type === 'image/png');
+          const maskable = manifest.icons.some(i => i.sizes === '512x512' && i.type === 'image/png' && String(i.purpose || '').includes('maskable'));
+          if (!icon192 || !icon512 || !maskable) throw new Error('manifest PNG icon contract incomplete');
+          for (const file of ['icons/icon-192.png','icons/icon-512.png','icons/icon-512-maskable.png']) {
+            if (!fs.existsSync(file) || fs.statSync(file).size === 0) throw new Error(`missing icon ${file}`);
+          }
+          if (!html.includes('name="viewport"') || !html.includes('name="theme-color"') || !html.includes('rel="manifest"')) throw new Error('mobile metadata incomplete');
+          if (!html.includes("navigator.serviceWorker.register('./sw.js?v=7-private-vary-star-safe'")) throw new Error('versioned service worker registration missing');
+          if (!html.includes("updateViaCache: 'none'")) throw new Error('service worker updateViaCache protection missing');
+          for (const token of [
+            "request.headers.has('authorization')",
+            "request.headers.has('cookie')",
+            "request.headers.has('range')",
+            "request.headers.has('if-range')",
+            "response.status === 206",
+            "response.headers.has('set-cookie')",
+            "response.headers.has('content-range')",
+            "no-store|private",
+            "key === 'range'",
+            "key === 'if-range'"
+          ]) {
+            if (!sw.includes(token)) throw new Error(`service worker safety guard missing: ${token}`);
+          }
+          if (!sw.includes("key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME")) throw new Error('scoped old-cache cleanup missing');
+          console.log('KIM PWA contract OK');
+          NODE

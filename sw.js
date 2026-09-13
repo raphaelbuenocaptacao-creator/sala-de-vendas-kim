@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'kim-vendas-shell-';
-const CACHE_NAME = `${CACHE_PREFIX}v8-private-vary-range-safe`;
+const CACHE_NAME = `${CACHE_PREFIX}v7-private-vary-star-safe`;
 const APP_SHELL = [
   './',
   './index.html',

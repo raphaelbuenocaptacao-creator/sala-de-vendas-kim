@@ -37,8 +37,12 @@ jobs:
             if (!fs.existsSync(file) || fs.statSync(file).size === 0) throw new Error(`missing icon ${file}`);
           }
           if (!html.includes('name="viewport"') || !html.includes('name="theme-color"') || !html.includes('rel="manifest"')) throw new Error('mobile metadata incomplete');
+          if (!html.includes('name="mobile-web-app-capable"') || !html.includes('name="apple-mobile-web-app-capable"')) throw new Error('install metadata incomplete');
           if (!html.includes("navigator.serviceWorker.register('./sw.js?v=7-private-vary-star-safe'")) throw new Error('versioned service worker registration missing');
           if (!html.includes("updateViaCache: 'none'")) throw new Error('service worker updateViaCache protection missing');
+          if (!html.includes("location.protocol === 'https:'") || !html.includes("location.hostname === 'localhost'") || !html.includes("location.hostname === '127.0.0.1'")) throw new Error('secure registration context guard missing');
+          if (!html.includes("document.addEventListener('visibilitychange'") || !html.includes("document.visibilityState === 'visible'") || !html.includes('registration.update()')) throw new Error('service worker refresh-on-resume missing');
+          if (!html.includes("navigator.serviceWorker.addEventListener('controllerchange'") || !html.includes('location.reload()')) throw new Error('service worker controller handoff missing');
           for (const token of [
             "request.headers.has('authorization')",
             "request.headers.has('cookie')",
